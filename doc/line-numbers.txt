@@ -1,0 +1,75 @@
+*line-numbers.nvim*    A plugin for side-by-side relative + absolute line numbers
+
+==============================================================================
+INTRODUCTION                                                   *line-numbers*
+
+This plugin shows both relative and absolute line numbers simultaneously
+using Neovim's `statuscolumn` feature (requires Neovim 0.9+).
+
+Features:
+- Relative, absolute, both, or none
+- Custom highlights
+- Custom separator
+- Lua-only, no dependencies
+
+==============================================================================
+INSTALLATION                                                  *line-numbers-install*
+
+With lazy.nvim:
+>
+    {
+      "shrynx/line-numbers.nvim",
+      opts = {
+        mode = "both",
+        format = "abs_rel",
+        separator = " ",
+        rel_highlight = { link = "LineNr" },
+        abs_highlight = { link = "LineNr" },
+      }
+    }
+
+With packer.nvim:
+>
+    use({
+      "shrynx/line-numbers.nvim",
+      config = function()
+        require("line-numbers").setup({
+            mode = "both",
+            format = "abs_rel",
+            separator = " ",
+            rel_highlight = { link = "LineNr" },
+            abs_highlight = { link = "LineNr" },
+        })
+      end
+    })
+
+==============================================================================
+CONFIGURATION                                                 *line-numbers-config*
+
+The `setup()` function accepts a table of options:
+
+> 
+  require("line-numbers").setup({
+    mode = "both",              -- "relative", "absolute", "both", "none"
+    format = "abs_rel",         -- or "rel_abs"
+    separator = " ",
+    rel_highlight = { link = "LineNr" },
+    abs_highlight = { link = "LineNr" },
+  })
+
+==============================================================================
+COMMANDS                                                      *line-numbers-commands*
+
+  :LineNumberToggle     - Toggle between all modes
+  :LineNumberRelative   - Show only relative numbers
+  :LineNumberAbsolute   - Show only absolute numbers
+  :LineNumberBoth       - Show both
+  :LineNumberNone       - Show none
+
+==============================================================================
+CREDITS                                                       *line-numbers-credits*
+
+Author: shrynx <https://github.com/shrynx>
+
+==============================================================================
+*line-numbers.txt* ends here
