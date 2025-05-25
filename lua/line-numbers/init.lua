@@ -15,6 +15,10 @@ M.config = {
   rel_highlight = { link = "LineNr" },
   -- Custom highlight for absolute numbers
   abs_highlight = { link = "LineNr" },
+  -- Custom highlight for current line relative numbers
+  current_rel_highlight = { link = "CursorLineNr" },
+  -- Custom highlight for current line absolute numbers
+  current_abs_highlight = { link = "CursorLineNr" },
 }
 
 -- Function to get the required width for a number
@@ -46,6 +50,7 @@ local function create_statuscolumn_formatter()
     local lnum = vim.v.lnum
     local rnum = math.abs(vim.v.relnum or 0)
     local total = vim.api.nvim_buf_line_count(0)
+    local is_current_line = vim.v.relnum == 0
 
     local abs_w = get_width(total)
     local rel_w = get_width(math.max(1, total - 1))
@@ -53,16 +58,19 @@ local function create_statuscolumn_formatter()
     local mode = M.config.mode
     local format = M.config.format
 
+    local abs_hl = is_current_line and "LineAbsCurrent" or "LineAbs"
+    local rel_hl = is_current_line and "LineRelCurrent" or "LineRel"
+
     if mode == "both" then
       if format == "abs_rel" then
-        return string.format("%%#LineAbs#%" .. abs_w .. "d %%#LineRel#%" .. rel_w .. "d%s", lnum, rnum, sep)
+        return string.format("%%#" .. abs_hl .. "#%" .. abs_w .. "d %%#" .. rel_hl .. "#%" .. rel_w .. "d%s", lnum, rnum, sep)
       else
-        return string.format("%%#LineRel#%" .. rel_w .. "d %%#LineAbs#%" .. abs_w .. "d%s", rnum, lnum, sep)
+        return string.format("%%#" .. rel_hl .. "#%" .. rel_w .. "d %%#" .. abs_hl .. "#%" .. abs_w .. "d%s", rnum, lnum, sep)
       end
     elseif mode == "relative" then
-      return string.format("%%#LineRel#%" .. rel_w .. "d%s", rnum, sep)
-    else -- absolute
-      return string.format("%%#LineAbs#%" .. abs_w .. "d%s", lnum, sep)
+      return string.format("%%#" .. rel_hl .. "#%" .. rel_w .. "d%s", rnum, sep)
+    else
+      return string.format("%%#" .. abs_hl .. "#%" .. abs_w .. "d%s", lnum, sep)
     end
   end
 
@@ -108,6 +116,8 @@ function M.setup(opts)
   -- Setup highlight groups
   vim.api.nvim_set_hl(0, "LineRel", M.config.rel_highlight or { link = "LineNr" })
   vim.api.nvim_set_hl(0, "LineAbs", M.config.abs_highlight or { link = "LineNr" })
+  vim.api.nvim_set_hl(0, "LineRelCurrent", M.config.current_rel_highlight or { link = "CursorLineNr" })
+  vim.api.nvim_set_hl(0, "LineAbsCurrent", M.config.current_abs_highlight or { link = "CursorLineNr" })
 
   -- Create autocommands
   local augroup = vim.api.nvim_create_augroup("LineNumbers", { clear = true })
@@ -117,6 +127,8 @@ function M.setup(opts)
     callback = function()
       vim.api.nvim_set_hl(0, "LineRel", M.config.rel_highlight or { link = "LineNr" })
       vim.api.nvim_set_hl(0, "LineAbs", M.config.abs_highlight or { link = "LineNr" })
+      vim.api.nvim_set_hl(0, "LineRelCurrent", M.config.current_rel_highlight or { link = "CursorLineNr" })
+      vim.api.nvim_set_hl(0, "LineAbsCurrent", M.config.current_abs_highlight or { link = "CursorLineNr" })
     end,
   })
 
@@ -127,7 +139,7 @@ function M.setup(opts)
     end,
   })
 
-  vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI" }, {
+  vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "CursorMoved", "CursorMovedI" }, {
     group = augroup,
     callback = function()
       create_statuscolumn_formatter()
