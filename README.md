@@ -8,6 +8,7 @@ A Neovim plugin to display both relative and absolute line numbers side-by-side 
 - Configurable format (`abs_rel` or `rel_abs`)
 - Custom separator between numbers
 - Highlight groups for styling relative and absolute numbers
+- Current line highlighting for styling the numbers on the cursor line
 - Lightweight and Lua-only
 
 ![screenshot](https://github.com/user-attachments/assets/ca8dc59b-7ad1-40c4-8a38-09bec8e0c707)
@@ -51,6 +52,8 @@ All the options are optional and below are the defaults.
   separator = " ",
   rel_highlight = { link = "LineNr" },
   abs_highlight = { link = "LineNr" },
+  current_rel_highlight = { link = "CursorLineNr" },
+  current_abs_highlight = { link = "CursorLineNr" },
 }
 ```
 

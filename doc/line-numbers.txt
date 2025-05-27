@@ -9,6 +9,7 @@ using Neovim's `statuscolumn` feature (requires Neovim 0.9+).
 Features:
 - Relative, absolute, both, or none
 - Custom highlights
+- Current line highlighting for styling the numbers on the cursor line
 - Custom separator
 - Lua-only, no dependencies
 
@@ -25,6 +26,8 @@ With lazy.nvim:
         separator = " ",
         rel_highlight = { link = "LineNr" },
         abs_highlight = { link = "LineNr" },
+        current_rel_highlight = { link = "CursorLineNr" },
+        current_abs_highlight = { link = "CursorLineNr" },
       }
     }
 
@@ -39,6 +42,8 @@ With packer.nvim:
             separator = " ",
             rel_highlight = { link = "LineNr" },
             abs_highlight = { link = "LineNr" },
+            current_rel_highlight = { link = "CursorLineNr" },
+            current_abs_highlight = { link = "CursorLineNr" },
         })
       end
     })
@@ -55,6 +60,8 @@ The `setup()` function accepts a table of options:
     separator = " ",
     rel_highlight = { link = "LineNr" },
     abs_highlight = { link = "LineNr" },
+    current_rel_highlight = { link = "CursorLineNr" },
+    current_abs_highlight = { link = "CursorLineNr" },
   })
 
 ==============================================================================
