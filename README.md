@@ -47,7 +47,7 @@ All the options are optional and below are the defaults.
 
 ```lua
 {
-  enabled = true,     -- initial state: true or false
+  enabled = true,     -- or false to disable by default
   mode = "both",      -- "relative", "absolute", "both", "none"
   format = "abs_rel", -- or "rel_abs"
   separator = " ",
@@ -68,6 +68,9 @@ All the options are optional and below are the defaults.
 - :LineNumberToggleEnabled
 - :LineNumberEnable
 - :LineNumberDisable
+
+> [!NOTE]
+> After disabling, you will need to apply your preferred line number settings (e.g. `vim.opt.number, vim.opt.relativenumber`) since the plugin may override the initial settings of them while being enabled.
 
 ## 📚 Help
 

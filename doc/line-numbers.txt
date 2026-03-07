@@ -55,9 +55,9 @@ CONFIGURATION                                                 *line-numbers-conf
 
 The `setup()` function accepts a table of options:
 
-> 
+>
   require("line-numbers").setup({
-    enabled = true,
+    enabled = true,             -- or false to disable by default
     mode = "both",              -- "relative", "absolute", "both", "none"
     format = "abs_rel",         -- or "rel_abs"
     separator = " ",
