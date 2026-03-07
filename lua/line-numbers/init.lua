@@ -5,6 +5,8 @@ local M = {}
 
 -- Default configuration
 M.config = {
+  -- Initial state of the plugin: true or false
+  enabled = true,
   -- Show mode can be: "relative", "absolute", "both", or "none"
   mode = "both",
   -- Format for numbers: "abs_rel" or "rel_abs"
@@ -26,6 +28,13 @@ local function get_width(num)
   return math.max(1, math.floor(math.log(num, 10)) + 1)
 end
 
+-- Helper to set statuscolumn for all windows
+local function set_statuscolumn_for_all_windows(value)
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    vim.wo[win].statuscolumn = value
+  end
+end
+
 -- Internal toggle to keep vim.v.relnum up-to-date
 local function apply_number_settings()
   vim.opt.number = false
@@ -37,7 +46,7 @@ local function apply_number_settings()
 end
 
 -- Function to create statuscolumn formatter
-local function create_statuscolumn_formatter()
+local function create_statuscolumn_formatter(apply_all)
   _G.line_numbers_format = function()
     local ft = vim.bo.filetype
     local bt = vim.bo.buftype
@@ -73,8 +82,11 @@ local function create_statuscolumn_formatter()
       return string.format("%%#" .. abs_hl .. "#%" .. abs_w .. "d%s", lnum, sep)
     end
   end
-
-  vim.opt.statuscolumn = "%s%{%v:lua.line_numbers_format()%}"
+  if apply_all then
+    set_statuscolumn_for_all_windows("%s%{%v:lua.line_numbers_format()%}")
+  else
+    vim.wo.statuscolumn = "%s%{%v:lua.line_numbers_format()%}"
+  end
 end
 
 -- Function to change display mode on the fly
@@ -84,8 +96,10 @@ function M.set_mode(mode)
   end
 
   M.config.mode = mode
-  apply_number_settings()
-  create_statuscolumn_formatter()
+  if M.config.enabled then
+    apply_number_settings()
+    create_statuscolumn_formatter()
+  end
 end
 
 -- Function to toggle between modes
@@ -102,6 +116,33 @@ function M.toggle_mode()
 
   local next_index = current_index % #modes + 1
   M.set_mode(modes[next_index])
+end
+
+function M.toggle_enabled()
+  if M.config.enabled then
+    M.disable()
+  elseif not M.config.enabled then
+    M.enable()
+  end
+end
+
+function M.enable()
+  if M.config.enabled == true then
+    vim.notify("LineNumbers: Already enabled", vim.log.levels.WARN)
+    return
+  end
+  M.config.enabled = true
+  apply_number_settings()
+  create_statuscolumn_formatter(true)
+end
+
+function M.disable()
+  if M.config.enabled == false then
+    vim.notify("LineNumbers: Already disabled", vim.log.levels.WARN)
+    return
+  end
+  M.config.enabled = false
+  set_statuscolumn_for_all_windows("")
 end
 
 -- Setup function to initialize the plugin with user configuration
@@ -135,6 +176,9 @@ function M.setup(opts)
   vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter", "VimResized" }, {
     group = augroup,
     callback = function()
+      if M.config.enabled == false then
+        return
+      end
       apply_number_settings()
     end,
   })
@@ -142,15 +186,20 @@ function M.setup(opts)
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "CursorMoved", "CursorMovedI" }, {
     group = augroup,
     callback = function()
+      if M.config.enabled == false then
+        return
+      end
       create_statuscolumn_formatter()
     end,
   })
 
-  -- Create the formatter and statuscolumn
-  create_statuscolumn_formatter()
+  if M.config.enabled then
+    -- Create the formatter and statuscolumn
+    create_statuscolumn_formatter()
 
-  -- Apply number settings
-  apply_number_settings()
+    -- Apply number settings
+    apply_number_settings()
+  end
 
   -- Create commands
   vim.api.nvim_create_user_command("LineNumberToggle", function()
@@ -173,8 +222,22 @@ function M.setup(opts)
     M.set_mode("none")
   end, {})
 
+  vim.api.nvim_create_user_command("LineNumberToggleEnabled", function()
+    M.toggle_enabled()
+  end, {})
+
+  vim.api.nvim_create_user_command("LineNumberEnable", function()
+    M.enable()
+  end, {})
+
+  vim.api.nvim_create_user_command("LineNumberDisable", function()
+    M.disable()
+  end, {})
+
   -- Set initial mode
-  M.set_mode(M.config.mode)
+  if M.config.enabled then
+    M.set_mode(M.config.mode)
+  end
 end
 
 return M
