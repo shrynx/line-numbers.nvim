@@ -47,6 +47,7 @@ All the options are optional and below are the defaults.
 
 ```lua
 {
+  enabled = true,     -- initial state: true or false
   mode = "both",      -- "relative", "absolute", "both", "none"
   format = "abs_rel", -- or "rel_abs"
   separator = " ",
@@ -64,6 +65,9 @@ All the options are optional and below are the defaults.
 - :LineNumberAbsolute
 - :LineNumberBoth
 - :LineNumberNone
+- :LineNumberToggleEnabled
+- :LineNumberEnable
+- :LineNumberDisable
 
 ## 📚 Help
 

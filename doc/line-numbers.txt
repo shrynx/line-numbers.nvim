@@ -21,6 +21,7 @@ With lazy.nvim:
     {
       "shrynx/line-numbers.nvim",
       opts = {
+        enabled = true,
         mode = "both",
         format = "abs_rel",
         separator = " ",
@@ -37,6 +38,7 @@ With packer.nvim:
       "shrynx/line-numbers.nvim",
       config = function()
         require("line-numbers").setup({
+            enabled = true,
             mode = "both",
             format = "abs_rel",
             separator = " ",
@@ -55,6 +57,7 @@ The `setup()` function accepts a table of options:
 
 > 
   require("line-numbers").setup({
+    enabled = true,
     mode = "both",              -- "relative", "absolute", "both", "none"
     format = "abs_rel",         -- or "rel_abs"
     separator = " ",
@@ -72,6 +75,9 @@ COMMANDS                                                      *line-numbers-comm
   :LineNumberAbsolute   - Show only absolute numbers
   :LineNumberBoth       - Show both
   :LineNumberNone       - Show none
+  :LineNumberToggleEnabled - Toggle plugin enabled state
+  :LineNumberEnable     - Enable plugin behavior
+  :LineNumberDisable    - Disable plugin behavior
 
 ==============================================================================
 CREDITS                                                       *line-numbers-credits*
