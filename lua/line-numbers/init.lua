@@ -139,13 +139,6 @@ function M.setup(opts)
     end,
   })
 
-  vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "CursorMoved", "CursorMovedI" }, {
-    group = augroup,
-    callback = function()
-      create_statuscolumn_formatter()
-    end,
-  })
-
   -- Create the formatter and statuscolumn
   create_statuscolumn_formatter()
 
