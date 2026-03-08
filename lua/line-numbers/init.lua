@@ -116,6 +116,9 @@ local function create_runtime_autocmds()
   vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter", "VimResized" }, {
     group = augroup_runtime,
     callback = function()
+      if not M.config.enabled then
+        return
+      end
       apply_number_settings()
     end,
   })
@@ -123,6 +126,9 @@ local function create_runtime_autocmds()
   vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "CursorMoved", "CursorMovedI" }, {
     group = augroup_runtime,
     callback = function()
+      if not M.config.enabled then
+        return
+      end
       create_statuscolumn_formatter()
     end,
   })
