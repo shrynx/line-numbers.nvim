@@ -163,7 +163,7 @@ end
 
 function M.disable_plugin()
   if M.config.enabled == false then
-    vim.notify("LineNumbers: Already disabled, but disable() was called", vim.log.levels.WARN)
+    vim.notify("LineNumbers: Already disabled, but disable_plugin() was called", vim.log.levels.WARN)
     return
   end
   M.config.enabled = false
