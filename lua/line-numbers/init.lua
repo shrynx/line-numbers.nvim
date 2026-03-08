@@ -28,13 +28,6 @@ local function get_width(num)
   return math.max(1, math.floor(math.log(num, 10)) + 1)
 end
 
--- Helper to set statuscolumn for all windows
-local function set_statuscolumn_for_all_windows(value)
-  for _, win in ipairs(vim.api.nvim_list_wins()) do
-    vim.wo[win].statuscolumn = value
-  end
-end
-
 -- Internal toggle to keep vim.v.relnum up-to-date
 local function apply_number_settings()
   vim.opt.number = false
@@ -46,7 +39,7 @@ local function apply_number_settings()
 end
 
 -- Function to create statuscolumn formatter
-local function create_statuscolumn_formatter(apply_all)
+local function create_statuscolumn_formatter()
   _G.line_numbers_format = function()
     local ft = vim.bo.filetype
     local bt = vim.bo.buftype
@@ -82,11 +75,7 @@ local function create_statuscolumn_formatter(apply_all)
       return string.format("%%#" .. abs_hl .. "#%" .. abs_w .. "d%s", lnum, sep)
     end
   end
-  if apply_all then
-    set_statuscolumn_for_all_windows("%s%{%v:lua.line_numbers_format()%}")
-  else
-    vim.wo.statuscolumn = "%s%{%v:lua.line_numbers_format()%}"
-  end
+  vim.opt.statuscolumn = "%s%{%v:lua.line_numbers_format()%}"
 end
 
 -- Function to change display mode on the fly
@@ -118,31 +107,72 @@ function M.toggle_mode()
   M.set_mode(modes[next_index])
 end
 
-function M.toggle_enabled()
+local function create_runtime_autocmds()
+  local augroup_runtime = vim.api.nvim_create_augroup("LineNumbersRuntime", { clear = true })
+  vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter", "VimResized" }, {
+    group = augroup_runtime,
+    callback = function()
+      apply_number_settings()
+    end,
+  })
+
+  vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "CursorMoved", "CursorMovedI" }, {
+    group = augroup_runtime,
+    callback = function()
+      create_statuscolumn_formatter()
+    end,
+  })
+end
+
+function M.toggle_plugin()
   if M.config.enabled then
-    M.disable()
-  elseif not M.config.enabled then
-    M.enable()
+    M.disable_plugin()
+  else
+    M.enable_plugin()
   end
 end
 
-function M.enable()
+local last_number_columns_config = {}
+
+local function save_last_number_columns_config()
+  last_number_columns_config = {}
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    last_number_columns_config[win] = {
+      number = vim.wo[win].number,
+      relativenumber = vim.wo[win].relativenumber,
+      statuscolumn = vim.wo[win].statuscolumn,
+    }
+  end
+end
+
+function M.enable_plugin()
   if M.config.enabled == true then
-    vim.notify("LineNumbers: Already enabled", vim.log.levels.WARN)
+    vim.notify("LineNumbers: Already enabled, but enable() was called", vim.log.levels.WARN)
     return
   end
   M.config.enabled = true
+  create_runtime_autocmds()
+  save_last_number_columns_config()
   apply_number_settings()
-  create_statuscolumn_formatter(true)
+  create_statuscolumn_formatter()
 end
 
-function M.disable()
+function M.disable_plugin()
   if M.config.enabled == false then
-    vim.notify("LineNumbers: Already disabled", vim.log.levels.WARN)
+    vim.notify("LineNumbers: Already disabled, but disable() was called", vim.log.levels.WARN)
     return
   end
   M.config.enabled = false
-  set_statuscolumn_for_all_windows("")
+  if not pcall(vim.api.nvim_del_augroup_by_name, "LineNumbersRuntime") then
+    vim.notify("LineNumbers: Failed to remove autocommands, they may still be active", vim.log.levels.WARN)
+  end
+  for win in pairs(last_number_columns_config) do
+    if vim.api.nvim_win_is_valid(win) then
+      vim.wo[win].number = last_number_columns_config[win].number
+      vim.wo[win].relativenumber = last_number_columns_config[win].relativenumber
+      vim.wo[win].statuscolumn = last_number_columns_config[win].statuscolumn
+    end
+  end
 end
 
 -- Setup function to initialize the plugin with user configuration
@@ -160,11 +190,10 @@ function M.setup(opts)
   vim.api.nvim_set_hl(0, "LineRelCurrent", M.config.current_rel_highlight or { link = "CursorLineNr" })
   vim.api.nvim_set_hl(0, "LineAbsCurrent", M.config.current_abs_highlight or { link = "CursorLineNr" })
 
-  -- Create autocommands
-  local augroup = vim.api.nvim_create_augroup("LineNumbers", { clear = true })
-
+  -- Create a persistent autocommand once
+  local augroup_persistent = vim.api.nvim_create_augroup("LineNumbersPersistent", { clear = true })
   vim.api.nvim_create_autocmd("ColorScheme", {
-    group = augroup,
+    group = augroup_persistent,
     callback = function()
       vim.api.nvim_set_hl(0, "LineRel", M.config.rel_highlight or { link = "LineNr" })
       vim.api.nvim_set_hl(0, "LineAbs", M.config.abs_highlight or { link = "LineNr" })
@@ -173,30 +202,13 @@ function M.setup(opts)
     end,
   })
 
-  vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter", "VimResized" }, {
-    group = augroup,
-    callback = function()
-      if M.config.enabled == false then
-        return
-      end
-      apply_number_settings()
-    end,
-  })
-
-  vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "CursorMoved", "CursorMovedI" }, {
-    group = augroup,
-    callback = function()
-      if M.config.enabled == false then
-        return
-      end
-      create_statuscolumn_formatter()
-    end,
-  })
+  save_last_number_columns_config()
 
   if M.config.enabled then
+    -- Create runtime autocommands
+    create_runtime_autocmds()
     -- Create the formatter and statuscolumn
     create_statuscolumn_formatter()
-
     -- Apply number settings
     apply_number_settings()
   end
@@ -222,16 +234,16 @@ function M.setup(opts)
     M.set_mode("none")
   end, {})
 
-  vim.api.nvim_create_user_command("LineNumberToggleEnabled", function()
-    M.toggle_enabled()
+  vim.api.nvim_create_user_command("LineNumberPluginToggle", function()
+    M.toggle_plugin()
   end, {})
 
-  vim.api.nvim_create_user_command("LineNumberEnable", function()
-    M.enable()
+  vim.api.nvim_create_user_command("LineNumberPluginEnable", function()
+    M.enable_plugin()
   end, {})
 
-  vim.api.nvim_create_user_command("LineNumberDisable", function()
-    M.disable()
+  vim.api.nvim_create_user_command("LineNumberPluginDisable", function()
+    M.disable_plugin()
   end, {})
 
   -- Set initial mode
