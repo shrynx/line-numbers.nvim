@@ -65,12 +65,12 @@ All the options are optional and below are the defaults.
 - :LineNumberAbsolute
 - :LineNumberBoth
 - :LineNumberNone
-- :LineNumberToggleEnabled
-- :LineNumberEnable
-- :LineNumberDisable
+- :LineNumberPluginToggle
+- :LineNumberPluginEnable
+- :LineNumberPluginDisable
 
 > [!NOTE]
-> After disabling, you will need to apply your preferred line number settings (e.g. `vim.opt.number, vim.opt.relativenumber`) since the plugin may override the initial settings of them while being enabled.
+> Disabling the plugin restores each tracked window's previous `number`, `relativenumber`, and `statuscolumn` values that are saved when the plugin is enabled.
 
 ## 📚 Help
 

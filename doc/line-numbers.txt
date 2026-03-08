@@ -75,9 +75,12 @@ COMMANDS                                                      *line-numbers-comm
   :LineNumberAbsolute   - Show only absolute numbers
   :LineNumberBoth       - Show both
   :LineNumberNone       - Show none
-  :LineNumberToggleEnabled - Toggle plugin enabled state
-  :LineNumberEnable     - Enable plugin behavior
-  :LineNumberDisable    - Disable plugin behavior
+  :LineNumberPluginToggle - Toggle plugin enabled state
+  :LineNumberPluginEnable - Enable plugin behavior
+  :LineNumberPluginDisable - Disable plugin behavior
+
+Disabling restores each tracked window's previous `number`,
+`relativenumber`, and `statuscolumn` values that are saved when the plugin is enabled.
 
 ==============================================================================
 CREDITS                                                       *line-numbers-credits*
