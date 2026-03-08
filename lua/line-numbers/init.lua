@@ -13,6 +13,10 @@ M.config = {
   format = "abs_rel",
   -- Seperator end of line numbers
   separator = " ",
+  -- Fallback options for windows where config weren't preserved
+  number_fallback = true,
+  relativenumber_fallback = true,
+  statuscolumn_fallback = "",
   -- Custom highlight for relative numbers
   rel_highlight = { link = "LineNr" },
   -- Custom highlight for absolute numbers
@@ -166,11 +170,15 @@ function M.disable_plugin()
   if not pcall(vim.api.nvim_del_augroup_by_name, "LineNumbersRuntime") then
     vim.notify("LineNumbers: Failed to remove autocommands, they may still be active", vim.log.levels.WARN)
   end
-  for win in pairs(last_number_columns_config) do
-    if vim.api.nvim_win_is_valid(win) then
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if last_number_columns_config[win] then
       vim.wo[win].number = last_number_columns_config[win].number
       vim.wo[win].relativenumber = last_number_columns_config[win].relativenumber
       vim.wo[win].statuscolumn = last_number_columns_config[win].statuscolumn
+    else
+      vim.wo[win].number = M.config.number_fallback
+      vim.wo[win].relativenumber = M.config.relativenumber_fallback
+      vim.wo[win].statuscolumn = M.config.statuscolumn_fallback
     end
   end
 end
