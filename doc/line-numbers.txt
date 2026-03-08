@@ -25,6 +25,9 @@ With lazy.nvim:
         mode = "both",
         format = "abs_rel",
         separator = " ",
+        number_fallback = true,
+        relativenumber_fallback = true,
+        statuscolumn_fallback = "",
         rel_highlight = { link = "LineNr" },
         abs_highlight = { link = "LineNr" },
         current_rel_highlight = { link = "CursorLineNr" },
@@ -42,6 +45,9 @@ With packer.nvim:
             mode = "both",
             format = "abs_rel",
             separator = " ",
+            number_fallback = true,
+            relativenumber_fallback = true,
+            statuscolumn_fallback = "",
             rel_highlight = { link = "LineNr" },
             abs_highlight = { link = "LineNr" },
             current_rel_highlight = { link = "CursorLineNr" },
@@ -61,11 +67,21 @@ The `setup()` function accepts a table of options:
     mode = "both",              -- "relative", "absolute", "both", "none"
     format = "abs_rel",         -- or "rel_abs"
     separator = " ",
+    number_fallback = true,
+    relativenumber_fallback = true,
+    statuscolumn_fallback = "",
     rel_highlight = { link = "LineNr" },
     abs_highlight = { link = "LineNr" },
     current_rel_highlight = { link = "CursorLineNr" },
     current_abs_highlight = { link = "CursorLineNr" },
   })
+
+These fallback options are used only when disabling the plugin for windows
+whose previous values were not captured:
+
+  number_fallback         (default: true)
+  relativenumber_fallback (default: true)
+  statuscolumn_fallback   (default: "")
 
 ==============================================================================
 COMMANDS                                                      *line-numbers-commands*

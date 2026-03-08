@@ -51,12 +51,19 @@ All the options are optional and below are the defaults.
   mode = "both",      -- "relative", "absolute", "both", "none"
   format = "abs_rel", -- or "rel_abs"
   separator = " ",
+  number_fallback = true,
+  relativenumber_fallback = true,
+  statuscolumn_fallback = "",
   rel_highlight = { link = "LineNr" },
   abs_highlight = { link = "LineNr" },
   current_rel_highlight = { link = "CursorLineNr" },
   current_abs_highlight = { link = "CursorLineNr" },
 }
 ```
+
+- `number_fallback`, `relativenumber_fallback`, and `statuscolumn_fallback`
+  are used only when disabling the plugin for windows whose previous values were
+  not captured.
 
 ## 🔀 Commands
 
