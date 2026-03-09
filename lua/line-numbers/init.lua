@@ -5,12 +5,18 @@ local M = {}
 
 -- Default configuration
 M.config = {
+  -- Initial state of the plugin: true or false
+  enabled = true,
   -- Show mode can be: "relative", "absolute", "both", or "none"
   mode = "both",
   -- Format for numbers: "abs_rel" or "rel_abs"
   format = "abs_rel",
   -- Seperator end of line numbers
   separator = " ",
+  -- Fallback options for windows where config weren't preserved
+  number_fallback = true,
+  relativenumber_fallback = true,
+  statuscolumn_fallback = "",
   -- Custom highlight for relative numbers
   rel_highlight = { link = "LineNr" },
   -- Custom highlight for absolute numbers
@@ -73,7 +79,6 @@ local function create_statuscolumn_formatter()
       return string.format("%%#" .. abs_hl .. "#%" .. abs_w .. "d%s", lnum, sep)
     end
   end
-
   vim.opt.statuscolumn = "%s%{%v:lua.line_numbers_format()%}"
 end
 
@@ -84,8 +89,10 @@ function M.set_mode(mode)
   end
 
   M.config.mode = mode
-  apply_number_settings()
-  create_statuscolumn_formatter()
+  if M.config.enabled then
+    apply_number_settings()
+    create_statuscolumn_formatter()
+  end
 end
 
 -- Function to toggle between modes
@@ -104,6 +111,84 @@ function M.toggle_mode()
   M.set_mode(modes[next_index])
 end
 
+local function create_runtime_autocmds()
+  local augroup_runtime = vim.api.nvim_create_augroup("LineNumbersRuntime", { clear = true })
+  vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter", "VimResized" }, {
+    group = augroup_runtime,
+    callback = function()
+      if not M.config.enabled then
+        return
+      end
+      apply_number_settings()
+    end,
+  })
+
+  vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "CursorMoved", "CursorMovedI" }, {
+    group = augroup_runtime,
+    callback = function()
+      if not M.config.enabled then
+        return
+      end
+      create_statuscolumn_formatter()
+    end,
+  })
+end
+
+function M.toggle_plugin()
+  if M.config.enabled then
+    M.disable_plugin()
+  else
+    M.enable_plugin()
+  end
+end
+
+local last_number_columns_config = {}
+
+local function save_last_number_columns_config()
+  last_number_columns_config = {}
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    last_number_columns_config[win] = {
+      number = vim.wo[win].number,
+      relativenumber = vim.wo[win].relativenumber,
+      statuscolumn = vim.wo[win].statuscolumn,
+    }
+  end
+end
+
+function M.enable_plugin()
+  if M.config.enabled == true then
+    vim.notify("LineNumbers: Already enabled, but enable_plugin() was called", vim.log.levels.WARN)
+    return
+  end
+  M.config.enabled = true
+  create_runtime_autocmds()
+  save_last_number_columns_config()
+  apply_number_settings()
+  create_statuscolumn_formatter()
+end
+
+function M.disable_plugin()
+  if M.config.enabled == false then
+    vim.notify("LineNumbers: Already disabled, but disable_plugin() was called", vim.log.levels.WARN)
+    return
+  end
+  M.config.enabled = false
+  if not pcall(vim.api.nvim_del_augroup_by_name, "LineNumbersRuntime") then
+    vim.notify("LineNumbers: Failed to remove autocommands, they may still be active", vim.log.levels.WARN)
+  end
+  for _, win in ipairs(vim.api.nvim_list_wins()) do
+    if last_number_columns_config[win] then
+      vim.wo[win].number = last_number_columns_config[win].number
+      vim.wo[win].relativenumber = last_number_columns_config[win].relativenumber
+      vim.wo[win].statuscolumn = last_number_columns_config[win].statuscolumn
+    else
+      vim.wo[win].number = M.config.number_fallback
+      vim.wo[win].relativenumber = M.config.relativenumber_fallback
+      vim.wo[win].statuscolumn = M.config.statuscolumn_fallback
+    end
+  end
+end
+
 -- Setup function to initialize the plugin with user configuration
 function M.setup(opts)
   -- Merge user config with defaults
@@ -119,11 +204,10 @@ function M.setup(opts)
   vim.api.nvim_set_hl(0, "LineRelCurrent", M.config.current_rel_highlight or { link = "CursorLineNr" })
   vim.api.nvim_set_hl(0, "LineAbsCurrent", M.config.current_abs_highlight or { link = "CursorLineNr" })
 
-  -- Create autocommands
-  local augroup = vim.api.nvim_create_augroup("LineNumbers", { clear = true })
-
+  -- Create a persistent autocommand once
+  local augroup_persistent = vim.api.nvim_create_augroup("LineNumbersPersistent", { clear = true })
   vim.api.nvim_create_autocmd("ColorScheme", {
-    group = augroup,
+    group = augroup_persistent,
     callback = function()
       vim.api.nvim_set_hl(0, "LineRel", M.config.rel_highlight or { link = "LineNr" })
       vim.api.nvim_set_hl(0, "LineAbs", M.config.abs_highlight or { link = "LineNr" })
@@ -132,25 +216,16 @@ function M.setup(opts)
     end,
   })
 
-  vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter", "VimResized" }, {
-    group = augroup,
-    callback = function()
-      apply_number_settings()
-    end,
-  })
+  save_last_number_columns_config()
 
-  vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "CursorMoved", "CursorMovedI" }, {
-    group = augroup,
-    callback = function()
-      create_statuscolumn_formatter()
-    end,
-  })
-
-  -- Create the formatter and statuscolumn
-  create_statuscolumn_formatter()
-
-  -- Apply number settings
-  apply_number_settings()
+  if M.config.enabled then
+    -- Create runtime autocommands
+    create_runtime_autocmds()
+    -- Create the formatter and statuscolumn
+    create_statuscolumn_formatter()
+    -- Apply number settings
+    apply_number_settings()
+  end
 
   -- Create commands
   vim.api.nvim_create_user_command("LineNumberToggle", function()
@@ -173,8 +248,22 @@ function M.setup(opts)
     M.set_mode("none")
   end, {})
 
+  vim.api.nvim_create_user_command("LineNumberPluginToggle", function()
+    M.toggle_plugin()
+  end, {})
+
+  vim.api.nvim_create_user_command("LineNumberPluginEnable", function()
+    M.enable_plugin()
+  end, {})
+
+  vim.api.nvim_create_user_command("LineNumberPluginDisable", function()
+    M.disable_plugin()
+  end, {})
+
   -- Set initial mode
-  M.set_mode(M.config.mode)
+  if M.config.enabled then
+    M.set_mode(M.config.mode)
+  end
 end
 
 return M

@@ -47,15 +47,23 @@ All the options are optional and below are the defaults.
 
 ```lua
 {
+  enabled = true,     -- or false to disable by default
   mode = "both",      -- "relative", "absolute", "both", "none"
   format = "abs_rel", -- or "rel_abs"
   separator = " ",
+  number_fallback = true,
+  relativenumber_fallback = true,
+  statuscolumn_fallback = "",
   rel_highlight = { link = "LineNr" },
   abs_highlight = { link = "LineNr" },
   current_rel_highlight = { link = "CursorLineNr" },
   current_abs_highlight = { link = "CursorLineNr" },
 }
 ```
+
+- `number_fallback`, `relativenumber_fallback`, and `statuscolumn_fallback`
+  are used only when disabling the plugin for windows whose previous values were
+  not captured.
 
 ## 🔀 Commands
 
@@ -64,6 +72,12 @@ All the options are optional and below are the defaults.
 - :LineNumberAbsolute
 - :LineNumberBoth
 - :LineNumberNone
+- :LineNumberPluginToggle
+- :LineNumberPluginEnable
+- :LineNumberPluginDisable
+
+> [!NOTE]
+> Disabling the plugin restores each tracked window's previous `number`, `relativenumber`, and `statuscolumn` values that are saved when the plugin is enabled.
 
 ## 📚 Help
 

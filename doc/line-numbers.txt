@@ -21,9 +21,13 @@ With lazy.nvim:
     {
       "shrynx/line-numbers.nvim",
       opts = {
+        enabled = true,
         mode = "both",
         format = "abs_rel",
         separator = " ",
+        number_fallback = true,
+        relativenumber_fallback = true,
+        statuscolumn_fallback = "",
         rel_highlight = { link = "LineNr" },
         abs_highlight = { link = "LineNr" },
         current_rel_highlight = { link = "CursorLineNr" },
@@ -37,9 +41,13 @@ With packer.nvim:
       "shrynx/line-numbers.nvim",
       config = function()
         require("line-numbers").setup({
+            enabled = true,
             mode = "both",
             format = "abs_rel",
             separator = " ",
+            number_fallback = true,
+            relativenumber_fallback = true,
+            statuscolumn_fallback = "",
             rel_highlight = { link = "LineNr" },
             abs_highlight = { link = "LineNr" },
             current_rel_highlight = { link = "CursorLineNr" },
@@ -53,16 +61,27 @@ CONFIGURATION                                                 *line-numbers-conf
 
 The `setup()` function accepts a table of options:
 
-> 
+>
   require("line-numbers").setup({
+    enabled = true,             -- or false to disable by default
     mode = "both",              -- "relative", "absolute", "both", "none"
     format = "abs_rel",         -- or "rel_abs"
     separator = " ",
+    number_fallback = true,
+    relativenumber_fallback = true,
+    statuscolumn_fallback = "",
     rel_highlight = { link = "LineNr" },
     abs_highlight = { link = "LineNr" },
     current_rel_highlight = { link = "CursorLineNr" },
     current_abs_highlight = { link = "CursorLineNr" },
   })
+
+These fallback options are used only when disabling the plugin for windows
+whose previous values were not captured:
+
+  number_fallback         (default: true)
+  relativenumber_fallback (default: true)
+  statuscolumn_fallback   (default: "")
 
 ==============================================================================
 COMMANDS                                                      *line-numbers-commands*
@@ -72,6 +91,12 @@ COMMANDS                                                      *line-numbers-comm
   :LineNumberAbsolute   - Show only absolute numbers
   :LineNumberBoth       - Show both
   :LineNumberNone       - Show none
+  :LineNumberPluginToggle - Toggle plugin enabled state
+  :LineNumberPluginEnable - Enable plugin behavior
+  :LineNumberPluginDisable - Disable plugin behavior
+
+Disabling restores each tracked window's previous `number`,
+`relativenumber`, and `statuscolumn` values that are saved when the plugin is enabled.
 
 ==============================================================================
 CREDITS                                                       *line-numbers-credits*
