@@ -251,10 +251,6 @@ function M.setup(opts)
     M.disable_plugin()
   end, {})
 
-  -- Set initial mode
-  if M.config.enabled then
-    M.set_mode(M.config.mode)
-  end
 end
 
 return M
