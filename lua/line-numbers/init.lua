@@ -120,15 +120,6 @@ local function create_runtime_autocmds()
         return
       end
       apply_number_settings()
-    end,
-  })
-
-  vim.api.nvim_create_autocmd({ "TextChanged", "TextChangedI", "CursorMoved", "CursorMovedI" }, {
-    group = augroup_runtime,
-    callback = function()
-      if not M.config.enabled then
-        return
-      end
       create_statuscolumn_formatter()
     end,
   })
